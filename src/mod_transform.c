@@ -330,7 +330,18 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
     void *orig_error_cb = xmlGenericErrorContext;
     xmlGenericErrorFunc orig_error_func = xmlGenericError;
 
+    dir_cfg *dconf = ap_get_module_config(f->r->per_dir_config,
+                                          &transform_module);
+
     xmlSetGenericErrorFunc((void *) f, transform_error_cb);
+
+    /* bail out early in case of subrequest */
+    if ((dconf->opts & INITIAL_ONLY) && !ap_is_initial_req(f->r)) {
+        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
+                      "Dropping transform on subrequest to %s", f->r->uri);
+
+        return ap_pass_brigade(f->next, bb);
+    }
 
     /* First Run of this Filter */
     if (!ctxt) {
@@ -347,7 +358,8 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
     for (b = APR_BRIGADE_FIRST(bb);
          b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b)) {
         if (APR_BUCKET_IS_EOS(b)) {
-            if (ctxt) {         /* done reading the file. run the transform now */
+            if (ctxt) {
+                /* done reading the file. run the transform now */
                 xmlParseChunk(ctxt, buf, 0, 1);
                 ret = transform_run(f, ctxt->myDoc);
                 xmlFreeParserCtxt(ctxt);
@@ -440,7 +452,8 @@ static void *transform_create_dir_config(apr_pool_t * p, char *x)
 {
     dir_cfg *conf = apr_pcalloc(p, sizeof(dir_cfg));
     /* Enable XIncludes By Default (backwards compat..?) */
-    conf->opts = 0 & XINCLUDES;
+    /* Enable initial req only as well */
+    conf->opts = 0 & (XINCLUDES | INITIAL_ONLY);
     conf->incremented_opts = 0;
     conf->decremented_opts = 0;
     conf->xslt = NULL;
@@ -495,6 +508,9 @@ static const char *add_opts(cmd_parms * cmd, void *d, const char *optstr)
         }
         else if (!strcasecmp(w, "XIncludes")) {
             option = XINCLUDES;
+        }
+        else if (!strcasecmp(w, "InitialRequest")) {
+            option = INITIAL_ONLY;
         }
         else if (!strcasecmp(w, "None")) {
             if (action != '\0') {
