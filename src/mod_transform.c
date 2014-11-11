@@ -185,10 +185,47 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
             transform = xsltParseStylesheetFile(dconf->default_xslt);
         }
         else if(pi_node == NULL) {
+            int length;
             /* no node was found, plus no default. */
-            ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, f->r, 
-                          "mod_transform: XSL not named in XML and No Default XSLT set");
             transform = NULL;
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r, 
+                          "mod_transform: Transform is a no-op: no processing"
+                          " instruction and no default XSLT set");
+
+            /* this is basically copied from the chunk at the bottom,
+               the only real difference being the saving function */
+
+            output_ctx.next = f->next;
+            output_ctx.bb   = apr_brigade_create
+              (f->r->pool, apr_bucket_alloc_create(f->r->pool));
+
+            output = xmlOutputBufferCreateIO(&transform_xmlio_output_write,
+                                             &transform_xmlio_output_close,
+                                             &output_ctx,
+                                             0);
+
+            /* this call closes the buffer */
+            length = xmlSaveFormatFileTo(output, doc, doc->encoding, 0);
+            xmlFreeDoc(doc);
+
+            if (length >= 0) {
+                /* set the content length */
+                if (!f->r->chunked) ap_set_content_length(f->r, length);
+
+                /* we shouldn't have to set the Content-Type because
+                 * it shouldn't be different from what we got */
+
+                /* clean up */
+                xmlParserInputBufferCreateFilenameDefault(orig);
+
+                /* send the brigade down the pipe */
+                ap_pass_brigade(output_ctx.next, output_ctx.bb);
+
+                /* get out of here */
+                return APR_SUCCESS;
+            }
+
+            return pass_failure(f, "XSLT: failed no-op document output", notes);
         }
         else {
             transform = xsltLoadStylesheetPI(doc);        
@@ -279,6 +316,8 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
         ap_set_content_length(f->r, length);
 
     xmlOutputBufferClose(output);
+    /* get rid of the input doc as well as the result tree */
+    xmlFreeDoc(doc);
     xmlFreeDoc(result);
     if (!stylesheet_is_cached)
         xsltFreeStylesheet(transform);
@@ -347,7 +386,8 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
     for (b = APR_BRIGADE_FIRST(bb);
          b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b)) {
         if (APR_BUCKET_IS_EOS(b)) {
-            if (ctxt) {         /* done reading the file. run the transform now */
+            if (ctxt) {
+                /* done reading the file. run the transform now */
                 xmlParseChunk(ctxt, buf, 0, 1);
                 ret = transform_run(f, ctxt->myDoc);
                 xmlFreeParserCtxt(ctxt);
