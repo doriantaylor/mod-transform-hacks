@@ -234,6 +234,23 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
         return pass_failure(f, "XSLT: Apply Stylesheet has Failed.", notes);
     }
 
+    /* make a blank dtd for html */
+    if ((transform->mediaType
+         && !strcasecmp(transform->mediaType, "text/html")) ||
+        (transform->method && !strcasecmp(transform->method, "html")) &&
+        (transform->doctypePublic == NULL &&
+         transform->doctypeSystem == NULL)) {
+        /* lol, got all that? now make a blank DTD. */
+        xmlDtdPtr dtd;
+        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
+                      "Adding blank doctype to outgoing HTML document");
+        dtd = xmlCreateIntSubset(result, (xmlChar *)"html", NULL, NULL);
+
+        if (!dtd)
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
+                          "Could not add blank DTD to outgoing HTML document");
+    }
+
     if (transform->mediaType) {
         /**
          * Note: If the XSLT We are using doesn't have an encoding, 
