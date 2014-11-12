@@ -235,11 +235,11 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
     }
 
     /* make a blank dtd for html */
-    if ((transform->mediaType
-         && !strcasecmp(transform->mediaType, "text/html")) ||
+    if (dconf->opts & BLANK_DTD &&
+        (transform->mediaType && !strcasecmp(transform->mediaType, "html")) ||
         (transform->method && !strcasecmp(transform->method, "html")) &&
-        (transform->doctypePublic == NULL &&
-         transform->doctypeSystem == NULL)) {
+        transform->doctypePublic == NULL &&
+        transform->doctypeSystem == NULL) {
         /* lol, got all that? now make a blank DTD. */
         xmlDtdPtr dtd;
         ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
@@ -512,6 +512,9 @@ static const char *add_opts(cmd_parms * cmd, void *d, const char *optstr)
         }
         else if (!strcasecmp(w, "XIncludes")) {
             option = XINCLUDES;
+        }
+        else if (!strcasecmp(w, "BlankHTMLDTD")) {
+            option = BLANK_DTD;
         }
         else if (!strcasecmp(w, "None")) {
             if (action != '\0') {
