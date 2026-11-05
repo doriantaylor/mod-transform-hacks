@@ -276,10 +276,9 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
 
     /* make a blank dtd for html */
     if (dconf->opts & BLANK_DTD &&
-        (transform->mediaType && !strcasecmp(transform->mediaType, "html")) ||
-        (transform->method && !strcasecmp(transform->method, "html")) &&
-        transform->doctypePublic == NULL &&
-        transform->doctypeSystem == NULL) {
+        transform->doctypePublic == NULL && transform->doctypeSystem == NULL &&
+        ((transform->mediaType && ap_strcasestr(transform->mediaType, "html")) ||
+         (transform->method && !strcasecmp(transform->method, "html")))) {
         /* lol, got all that? now make a blank DTD. */
         xmlDtdPtr dtd;
         ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
