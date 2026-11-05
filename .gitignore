@@ -21,3 +21,4 @@ missing
 *.la
 *.lo
 *.o
+debian/*.ex

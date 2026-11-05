@@ -1,0 +1,22 @@
+Source: libapache2-mod-transform
+Section: httpd
+Priority: extra
+Maintainer: Dorian Taylor <code@doriantaylor.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ autotools-dev,
+ apache2-dev, libxml2-dev, libxslt1-dev
+Standards-Version: 4.7.2
+Homepage: https://github.com/doriantaylor/mod-transform-hacks
+#Vcs-Browser: https://salsa.debian.org/debian/libapache2-mod-transform
+#Vcs-Git: https://salsa.debian.org/debian/libapache2-mod-transform.git
+
+Package: libapache2-mod-transform
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${apache2:Depends},
+ ${misc:Depends},
+Description: Description: Fast, dynamic XSLT filtering for Apache 2.x
+  (+ Dorian haxxx)
