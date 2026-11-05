@@ -65,6 +65,7 @@ extern module AP_MODULE_DECLARE_DATA transform_module;
 #define XINCLUDES           (1 <<  2)
 #define INITIAL_ONLY        (1 <<  3)
 #define BLANK_DTD           (1 <<  4)
+#define XML_ONLY            (1 <<  5)
 
 /* Extension Namespace */
 #define TRANSFORM_APACHE_NAMESPACE ((const xmlChar *) "http://outoforder.cc/apache")

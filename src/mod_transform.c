@@ -385,6 +385,19 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
     apr_status_t ret = APR_SUCCESS;
     void *orig_error_cb = xmlGenericErrorContext;
     xmlGenericErrorFunc orig_error_func = xmlGenericError;
+    dir_cfg *dconf = ap_get_module_config(f->r->per_dir_config,
+                                          &transform_module);
+    
+    /* bail out early if Content-Type does not contain 'xml' */
+    if (dconf->opts & XML_ONLY && strcasecmp(f->r->content_type, "xml") != 0) {
+        /* only whine once */
+        if (!ctxt) ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
+                                 "Ignoring %s with Content-Type %s ",
+                                 f->r->uri, f->r->content_type);
+      
+        ap_pass_brigade(f->next, bb);
+        return APR_SUCCESS;
+    }
 
     dir_cfg *dconf = ap_get_module_config(f->r->per_dir_config,
                                           &transform_module);
@@ -401,8 +414,10 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
 
     /* First Run of this Filter */
     if (!ctxt) {
+            
         /* unset content-length */
         apr_table_unset(f->r->headers_out, "Content-Length");
+        
         if (f->r->filename) {
             depends_add_file(f->r, f->r->filename);
         }
@@ -567,8 +582,12 @@ static const char *add_opts(cmd_parms * cmd, void *d, const char *optstr)
         }
         else if (!strcasecmp(w, "InitialRequest")) {
             option = INITIAL_ONLY;
+        }
         else if (!strcasecmp(w, "BlankHTMLDTD")) {
             option = BLANK_DTD;
+        }
+        else if (!strcasecmp(w, "XMLOnly")) {
+            option = XML_ONLY;
         }
         else if (!strcasecmp(w, "None")) {
             if (action != '\0') {
