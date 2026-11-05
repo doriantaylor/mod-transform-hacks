@@ -6,7 +6,7 @@ Rules-Requires-Root: no
 Build-Depends:
  debhelper-compat (= 13),
  autotools-dev,
- apache2-dev, libxml2-dev, libxslt1-dev
+ apache2-dev, libxml2-dev, libxslt1-dev, pkgconf, libapreq2-dev
 Standards-Version: 4.7.2
 Homepage: https://github.com/doriantaylor/mod-transform-hacks
 #Vcs-Browser: https://salsa.debian.org/debian/libapache2-mod-transform

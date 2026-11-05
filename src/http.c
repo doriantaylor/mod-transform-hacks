@@ -56,7 +56,7 @@ static void httpRemoteIP(xmlXPathParserContextPtr ctxt, int nargs) {
 		return;
 	}
 
-	xmlXPathReturnString(ctxt, xmlStrdup((xmlChar *)FFilter->r->connection->remote_ip));
+	xmlXPathReturnString(ctxt, xmlStrdup((xmlChar *)FFilter->r->connection->client_ip));
 }
 
 /*! \brief string http:remote-port();
@@ -69,7 +69,7 @@ static void httpRemotePort(xmlXPathParserContextPtr ctxt, int nargs) {
 		return;
 	}
 
-	xmlXPathReturnNumber(ctxt, FFilter->r->connection->remote_addr->port);
+	xmlXPathReturnNumber(ctxt, FFilter->r->connection->client_addr->port);
 }
 
 /*! \brief string http:request-header(string name);

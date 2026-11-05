@@ -23,7 +23,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define HAVE_MOD_DEPENDS 0
+#if HAVE_MOD_DEPENDS
 #include "mod_depends.h"
+#endif
 #include "mod_transform.h"
 #include "mod_transform_private.h"
 #include <libxslt/extensions.h>
@@ -399,9 +402,6 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
         return APR_SUCCESS;
     }
 
-    dir_cfg *dconf = ap_get_module_config(f->r->per_dir_config,
-                                          &transform_module);
-
     xmlSetGenericErrorFunc((void *) f, transform_error_cb);
 
     /* bail out early in case of subrequest */
@@ -417,10 +417,11 @@ static apr_status_t transform_filter(ap_filter_t * f, apr_bucket_brigade * bb)
             
         /* unset content-length */
         apr_table_unset(f->r->headers_out, "Content-Length");
-        
+#if HAV_MOD_DEPENDS
         if (f->r->filename) {
             depends_add_file(f->r, f->r->filename);
         }
+#endif
     }
 
     if ((f->r->proto_num >= 1001) && !f->r->main && !f->r->prev)
