@@ -61,7 +61,7 @@ static xmlNodePtr find_stylesheet_node(xmlDocPtr doc)
     xmlNodePtr child;
     child = doc->children;
     while ((child != NULL) && (child->type != XML_ELEMENT_NODE)) {
-        if ((child->type == XML_PI_NODE) && 
+        if ((child->type == XML_PI_NODE) &&
             (xmlStrEqual(child->name, BAD_CAST "xml-stylesheet"))) {
             if (child->content != NULL) {
                 return child;
@@ -93,7 +93,7 @@ static void transformApacheGetFunction (xmlXPathParserContextPtr ctxt, int nargs
             char *value;
             char *query_string;
             char *strtok_state;
-       
+
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, "Requesting Get Aarg: %s", variable);
 
             query_string = apr_pstrdup(r->pool, r->args);
@@ -146,7 +146,7 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
     xmlOutputBufferPtr output;
     xmlParserInputBufferCreateFilenameFunc orig;
     xsltTransformContextPtr tcontext;
-    
+
     transform_notes *notes =
         ap_get_module_config(f->r->request_config, &transform_module);
     dir_cfg *dconf = ap_get_module_config(f->r->per_dir_config,
@@ -191,7 +191,7 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
             int length;
             /* no node was found, plus no default. */
             transform = NULL;
-            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r, 
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r,
                           "mod_transform: Transform is a no-op: no processing"
                           " instruction and no default XSLT set");
 
@@ -231,7 +231,7 @@ static apr_status_t transform_run(ap_filter_t * f, xmlDocPtr doc)
             return pass_failure(f, "XSLT: failed no-op document output", notes);
         }
         else {
-            transform = xsltLoadStylesheetPI(doc);        
+            transform = xsltLoadStylesheetPI(doc);
         }
     }
 
